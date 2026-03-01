@@ -311,6 +311,7 @@
 
             const videoRef = useRef(null);
             const canvasRef = useRef(null);
+            const streamRef = useRef(null);
 
             const loadModels = async () => {
                 setIsLoadingModels(true);
@@ -373,15 +374,22 @@
                 }
             };
 
+            // Attach stream to video element once it mounts (showCamera = true)
+            useEffect(() => {
+                if (showCamera && videoRef.current && streamRef.current) {
+                    videoRef.current.srcObject = streamRef.current;
+                    videoRef.current.play().catch(() => {});
+                }
+            }, [showCamera]);
+
             const startCamera = async () => {
+                setError('');
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({
                         video: { facingMode: 'user' }
                     });
-                    if (videoRef.current) {
-                        videoRef.current.srcObject = stream;
-                        setShowCamera(true);
-                    }
+                    streamRef.current = stream;
+                    setShowCamera(true); // mounts video element, useEffect above attaches stream
                 } catch (err) {
                     setError('Failed to access camera: ' + err.message);
                 }
@@ -402,9 +410,9 @@
                         processGuestPhoto(file);
                     });
 
-                    const stream = video.srcObject;
-                    if (stream) {
-                        stream.getTracks().forEach(track => track.stop());
+                    if (streamRef.current) {
+                        streamRef.current.getTracks().forEach(track => track.stop());
+                        streamRef.current = null;
                     }
                     setShowCamera(false);
                 }
@@ -615,6 +623,7 @@
                                         ref={videoRef}
                                         autoPlay
                                         muted
+                                        playsInline
                                         className="camera-feed"
                                     />
                                     <button className="capture-btn" onClick={captureSelfie}>
