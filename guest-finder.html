@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Your Photos - Parth & Riddhi's Goldhana</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #8B4513 0%, #D2691E  50%, #CD853F 100%);
+            min-height: 100vh;
+            color: #2C1810;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 2px solid #D4AF37;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            color: #8B4513;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header .ceremony {
+            font-size: 1.8rem;
+            color: #D2691E;
+            font-weight: 300;
+            margin-bottom: 15px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: #5D4E37;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            margin: 20px 0;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+            border: 1px solid #DDD;
+        }
+
+        .section h2 {
+            color: #8B4513;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #D4AF37;
+            padding-bottom: 10px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+            color: #8B4513;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn:disabled {
+            background: #CCC;
+            color: #888;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #CD853F 0%, #D2691E 100%);
+            color: white;
+        }
+
+        .camera-container {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .camera-feed {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .capture-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #D4AF37;
+            border: none;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .capture-btn:hover {
+            transform: translateX(-50%) scale(1.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #D4AF37;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .photo-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s;
+        }
+
+        .photo-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .photo-info {
+            padding: 15px;
+        }
+
+        .confidence-bar {
+            background: #f0f0f0;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #D4AF37, #FFD700);
+            transition: width 0.3s;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin: 15px 0;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #c3e6cb;
+            margin: 15px 0;
+        }
+
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ffeaa7;
+            margin: 15px 0;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: rgba(212, 175, 55, 0.1);
+            border-radius: 8px;
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #8B4513;
+        }
+
+        .stat-label {
+            color: #5D4E37;
+            font-size: 0.9rem;
+        }
+
+        .welcome-section {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .welcome-section .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .header .ceremony {
+                font-size: 1.3rem;
+            }
+
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        const FACE_API_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model';
+        const CONFIDENCE_THRESHOLD = 0.45; // Lower = more strict matching
+
+        function GuestFinder() {
+            const [isLoadingModels, setIsLoadingModels] = useState(false);
+            const [modelsLoaded, setModelsLoaded] = useState(false);
+            const [indexedPhotos, setIndexedPhotos] = useState([]);
+            const [guestPhoto, setGuestPhoto] = useState(null);
+            const [isProcessingGuest, setIsProcessingGuest] = useState(false);
+            const [matchedPhotos, setMatchedPhotos] = useState([]);
+            const [showCamera, setShowCamera] = useState(false);
+            const [error, setError] = useState('');
+            const [success, setSuccess] = useState('');
+            const [warning, setWarning] = useState('');
+            
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+
+            // Load face-api models
+            const loadModels = async () => {
+                setIsLoadingModels(true);
+                setError('');
+                try {
+                    await faceapi.nets.ssdMobilenetv1.loadFromUri(FACE_API_MODEL_URL);
+                    await faceapi.nets.faceLandmark68Net.loadFromUri(FACE_API_MODEL_URL);
+                    await faceapi.nets.faceRecognitionNet.loadFromUri(FACE_API_MODEL_URL);
+                    setModelsLoaded(true);
+                } catch (err) {
+                    setError('Failed to load face detection models: ' + err.message);
+                } finally {
+                    setIsLoadingModels(false);
+                }
+            };
+
+            // Load indexed photos from localStorage
+            const loadIndexedPhotos = () => {
+                try {
+                    const stored = localStorage.getItem('goldhana-indexed-photos');
+                    if (stored) {
+                        const data = JSON.parse(stored);
+                        if (data.photos && data.photos.length > 0) {
+                            // Convert descriptor arrays back to Float32Arrays
+                            const photos = data.photos.map(photo => ({
+                                ...photo,
+                                descriptor: new Float32Array(photo.descriptor)
+                            }));
+                            setIndexedPhotos(photos);
+                            return true;
+                        }
+                    }
+                    return false;
+                } catch (error) {
+                    console.error('Failed to load indexed photos:', error);
+                    setError('Failed to load photo database. Please contact the hosts.');
+                    return false;
+                }
+            };
+
+            useEffect(() => {
+                loadModels();
+                const hasPhotos = loadIndexedPhotos();
+                
+                if (!hasPhotos) {
+                    setWarning('No photos found! The hosts need to set up the photo database first.');
+                }
+            }, []);
+
+            // Extract face descriptors from image
+            const extractFaceDescriptor = async (imageElement) => {
+                try {
+                    const detection = await faceapi
+                        .detectSingleFace(imageElement)
+                        .withFaceLandmarks()
+                        .withFaceDescriptor();
+                    
+                    return detection ? detection.descriptor : null;
+                } catch (error) {
+                    console.warn('Face detection failed:', error);
+                    return null;
+                }
+            };
+
+            // Start camera for selfie
+            const startCamera = async () => {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ 
+                        video: { facingMode: 'user' } 
+                    });
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = stream;
+                        setShowCamera(true);
+                    }
+                } catch (error) {
+                    setError('Failed to access camera: ' + error.message);
+                }
+            };
+
+            // Capture selfie from camera
+            const captureSelfie = () => {
+                const video = videoRef.current;
+                const canvas = canvasRef.current;
+                
+                if (video && canvas) {
+                    const context = canvas.getContext('2d');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    context.drawImage(video, 0, 0);
+                    
+                    canvas.toBlob((blob) => {
+                        const file = new File([blob], 'selfie.jpg', { type: 'image/jpeg' });
+                        processGuestPhoto(file);
+                    });
+                    
+                    // Stop camera
+                    const stream = video.srcObject;
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                    }
+                    setShowCamera(false);
+                }
+            };
+
+            // Process guest photo and find matches
+            const processGuestPhoto = async (file) => {
+                if (!modelsLoaded) {
+                    setError('Face detection is still loading. Please wait a moment and try again.');
+                    return;
+                }
+
+                if (indexedPhotos.length === 0) {
+                    setError('No photos available to search. Please contact the hosts.');
+                    return;
+                }
+
+                setIsProcessingGuest(true);
+                setError('');
+                setSuccess('');
+                setWarning('');
+                setMatchedPhotos([]);
+
+                try {
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = url;
+                    });
+
+                    setGuestPhoto(url);
+
+                    const guestDescriptor = await extractFaceDescriptor(img);
+                    if (!guestDescriptor) {
+                        throw new Error('No face detected in your photo. Please try again with a clearer, well-lit image where your face is clearly visible.');
+                    }
+
+                    const matches = [];
+                    const seenPhotos = new Set();
+
+                    for (const photo of indexedPhotos) {
+                        try {
+                            const distance = faceapi.euclideanDistance(guestDescriptor, photo.descriptor);
+                            const confidence = Math.max(0, (1 - distance) * 100);
+                            
+                            if (distance < CONFIDENCE_THRESHOLD && !seenPhotos.has(photo.id)) {
+                                matches.push({ ...photo, confidence, distance });
+                                seenPhotos.add(photo.id);
+                            }
+                        } catch (error) {
+                            console.warn('Error comparing with photo:', photo.name, error);
+                        }
+                    }
+
+                    matches.sort((a, b) => a.distance - b.distance);
+                    setMatchedPhotos(matches);
+                    
+                    if (matches.length > 0) {
+                        setSuccess(`Found ${matches.length} photos featuring you! 🎉`);
+                    } else {
+                        setWarning('No matches found. This could mean: (1) You might not be in the indexed photos, (2) Try a different photo with better lighting, (3) Try a photo where your face is more clearly visible.');
+                    }
+
+                    URL.revokeObjectURL(url);
+                } catch (error) {
+                    setError(error.message);
+                } finally {
+                    setIsProcessingGuest(false);
+                }
+            };
+
+            // Download all matched photos
+            const downloadAllMatches = () => {
+                if (matchedPhotos.length === 0) return;
+                
+                setSuccess(`Starting download of ${matchedPhotos.length} photos...`);
+                matchedPhotos.forEach((photo, index) => {
+                    setTimeout(() => {
+                        const link = document.createElement('a');
+                        link.href = photo.downloadUrl;
+                        link.download = photo.name;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                    }, index * 500); // Stagger downloads
+                });
+            };
+
+            // If no photos are loaded, show setup message
+            if (indexedPhotos.length === 0 && !isLoadingModels) {
+                return (
+                    <div className="container">
+                        <div className="header">
+                            <h1>🌺 Parth & Riddhi 🌺</h1>
+                            <div className="ceremony">Goldhana Ceremony</div>
+                            <p>Find Your Beautiful Moments</p>
+                        </div>
+
+                        <div className="section">
+                            <div className="welcome-section">
+                                <div className="icon">📸</div>
+                                <h2>Photos Not Ready Yet</h2>
+                                <p style={{ fontSize: '1.1rem', lineHeight: '1.6', margin: '20px 0' }}>
+                                    The wedding photo database hasn't been set up yet. 
+                                    Please ask Parth & Riddhi to index the photos first!
+                                </p>
+                                <button className="btn" onClick={() => window.location.reload()}>
+                                    🔄 Check Again
+                                </button>
+                            </div>
+                        </div>
+
+                        {warning && <div className="warning">⚠️ {warning}</div>}
+                        {error && <div className="error">❌ {error}</div>}
+                    </div>
+                );
+            }
+
+            return (
+                <div className="container">
+                    <div className="header">
+                        <h1>🌺 Parth & Riddhi 🌺</h1>
+                        <div className="ceremony">Goldhana Ceremony</div>
+                        <p>Upload your photo to find all the beautiful moments you're part of!</p>
+                    </div>
+
+                    {/* Photo Search Section */}
+                    <div className="section">
+                        <h2>📷 Find Your Photos</h2>
+                        <p style={{ marginBottom: '25px', color: '#5D4E37', fontSize: '1.1rem' }}>
+                            Take a selfie or upload a clear photo of yourself. We'll find all the wedding photos you appear in!
+                        </p>
+                        
+                        <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                            <button 
+                                className="btn" 
+                                onClick={startCamera}
+                                disabled={!modelsLoaded || isProcessingGuest}
+                            >
+                                📷 Take Selfie
+                            </button>
+                            <button 
+                                className="btn btn-secondary"
+                                disabled={!modelsLoaded || isProcessingGuest}
+                                onClick={() => {
+                                    const input = document.createElement('input');
+                                    input.type = 'file';
+                                    input.accept = 'image/*';
+                                    input.onchange = (e) => {
+                                        if (e.target.files[0]) {
+                                            processGuestPhoto(e.target.files[0]);
+                                        }
+                                    };
+                                    input.click();
+                                }}
+                            >
+                                📁 Upload Photo
+                            </button>
+                        </div>
+
+                        {/* Stats */}
+                        <div className="stats">
+                            <div className="stat-item">
+                                <div className="stat-number">{indexedPhotos.length}</div>
+                                <div className="stat-label">Photos Available</div>
+                            </div>
+                            <div className="stat-item">
+                                <div className="stat-number">{modelsLoaded ? '✓' : '⏳'}</div>
+                                <div className="stat-label">Face Detection</div>
+                            </div>
+                            <div className="stat-item">
+                                <div className="stat-number">{Math.round((1 - CONFIDENCE_THRESHOLD) * 100)}%</div>
+                                <div className="stat-label">Match Accuracy</div>
+                            </div>
+                        </div>
+
+                        {/* Camera Feed */}
+                        {showCamera && (
+                            <div style={{ marginTop: '25px' }}>
+                                <div className="camera-container">
+                                    <video 
+                                        ref={videoRef} 
+                                        autoPlay 
+                                        muted 
+                                        className="camera-feed"
+                                    />
+                                    <button className="capture-btn" onClick={captureSelfie}>
+                                        📸
+                                    </button>
+                                </div>
+                                <p style={{ textAlign: 'center', marginTop: '15px', color: '#5D4E37' }}>
+                                    Position your face clearly in the frame and click the camera button
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Processing Status */}
+                        {isProcessingGuest && (
+                            <div className="loading">
+                                <div className="spinner"></div>
+                                <p>Analyzing your photo and searching for matches...</p>
+                                <p style={{ fontSize: '0.9rem', color: '#888', marginTop: '10px' }}>
+                                    This may take a few moments for large photo collections
+                                </p>
+                            </div>
+                        )}
+
+                        {/* Guest Photo Preview */}
+                        {guestPhoto && !isProcessingGuest && (
+                            <div style={{ textAlign: 'center', margin: '25px 0' }}>
+                                <h4 style={{ color: '#8B4513', marginBottom: '15px' }}>Your Photo:</h4>
+                                <img 
+                                    src={guestPhoto} 
+                                    alt="Your photo" 
+                                    style={{ 
+                                        maxWidth: '200px', 
+                                        maxHeight: '200px',
+                                        borderRadius: '12px',
+                                        boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                                        objectFit: 'cover'
+                                    }} 
+                                />
+                            </div>
+                        )}
+
+                        {/* Model Loading Status */}
+                        {isLoadingModels && (
+                            <div className="loading">
+                                <div className="spinner"></div>
+                                <p>Loading face detection system...</p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Results Section */}
+                    {matchedPhotos.length > 0 && (
+                        <div className="section">
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap' }}>
+                                <h2>✨ Your Photos ({matchedPhotos.length})</h2>
+                                <button className="btn" onClick={downloadAllMatches}>
+                                    💾 Download All ({matchedPhotos.length})
+                                </button>
+                            </div>
+                            
+                            <div className="gallery">
+                                {matchedPhotos.map((photo, index) => (
+                                    <div key={photo.id + index} className="photo-card">
+                                        <img src={photo.thumbnail} alt={photo.name} />
+                                        <div className="photo-info">
+                                            <h4 style={{ marginBottom: '10px', color: '#8B4513', fontSize: '0.9rem' }}>
+                                                {photo.name}
+                                            </h4>
+                                            <div className="confidence-bar">
+                                                <div 
+                                                    className="confidence-fill"
+                                                    style={{ width: `${photo.confidence}%` }}
+                                                />
+                                            </div>
+                                            <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '12px' }}>
+                                                Match: {photo.confidence.toFixed(1)}%
+                                            </p>
+                                            <button 
+                                                className="btn"
+                                                style={{ fontSize: '14px', padding: '8px 16px', width: '100%' }}
+                                                onClick={() => {
+                                                    const link = document.createElement('a');
+                                                    link.href = photo.downloadUrl;
+                                                    link.download = photo.name;
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    document.body.removeChild(link);
+                                                }}
+                                            >
+                                                💾 Download
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            
+                            <div style={{ textAlign: 'center', marginTop: '30px' }}>
+                                <p style={{ color: '#5D4E37', fontSize: '0.95rem' }}>
+                                    Photos are sorted by match confidence. Higher percentages mean we're more confident it's you!
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Messages */}
+                    {error && <div className="error">❌ {error}</div>}
+                    {success && <div className="success">✅ {success}</div>}
+                    {warning && <div className="warning">⚠️ {warning}</div>}
+
+                    {/* Hidden Canvas for Photo Capture */}
+                    <canvas ref={canvasRef} style={{ display: 'none' }} />
+                </div>
+            );
+        }
+
+        ReactDOM.render(<GuestFinder />, document.getElementById('root'));
+    </script>
+</body>
+</html>
