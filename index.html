@@ -648,6 +648,36 @@
             font-family: 'Cormorant Garamond', serif;
         }
 
+        /* ── FILM SECTION ── */
+        .film-section h2 {
+            font-family: 'Cormorant Garamond', serif;
+            color: #3d5c38;
+            font-size: 1.7rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .film-section .section-subtitle {
+            margin-bottom: 20px;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%; /* 16:9 */
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 6px 32px rgba(30, 40, 25, 0.18);
+        }
+
+        .video-wrapper iframe {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
         /* ── RESPONSIVE ── */
         @media (max-width: 640px) {
             .header h1    { font-size: 2.8rem; }
@@ -937,6 +967,19 @@
                 <div className="container">
                     <Header />
 
+                    <div className="section film-section">
+                        <h2>Our Ceremony Film</h2>
+                        <p className="section-subtitle">Relive every blessed moment of our Goldhana</p>
+                        <div className="video-wrapper">
+                            <iframe
+                                src="https://www.youtube.com/embed/kcfAAK_nvPY"
+                                title="Riddhi &amp; Parth — Goldhana Ceremony Film"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </div>
+                    </div>
+
                     <div className="section">
                         <h2>Find Your Photos</h2>
                         <p className="section-subtitle">
@@ -972,23 +1015,6 @@
                             >
                                 {modelsLoaded ? '🌸  Upload Photo' : '⏳  Loading...'}
                             </button>
-                        </div>
-
-                        <div className="stats">
-                            <div className="stat-item">
-                                <div className="stat-number">{indexedPhotos.length.toLocaleString()}</div>
-                                <div className="stat-label">Photos</div>
-                            </div>
-                            <div className="stat-item">
-                                <div className="stat-number" style={{ fontSize: modelsLoaded ? '1.4rem' : '1.9rem' }}>
-                                    {modelsLoaded ? 'Ready' : '⏳'}
-                                </div>
-                                <div className="stat-label">Face Detection</div>
-                            </div>
-                            <div className="stat-item">
-                                <div className="stat-number">{Math.round((1 - CONFIDENCE_THRESHOLD) * 100)}%</div>
-                                <div className="stat-label">Accuracy</div>
-                            </div>
                         </div>
 
                         {showCamera && (
