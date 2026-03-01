@@ -301,8 +301,8 @@
                                 id: file.id,
                                 name: file.name,
                                 path: `${path}/${file.name}`,
-                                downloadUrl: file.webContentLink,
-                                viewUrl: file.webViewLink
+                                downloadUrl: `https://drive.google.com/uc?id=${file.id}&export=download`,
+                                viewUrl: `https://drive.google.com/file/d/${file.id}/view`
                             });
                         }
                     }
@@ -371,7 +371,7 @@
                                     console.error(`Failed to load image: ${file.name}`, error);
                                     reject(error);
                                 };
-                                img.src = `https://drive.google.com/thumbnail?id=${file.id}&sz=w800`;
+                                img.src = `https://lh3.googleusercontent.com/d/${file.id}=w800`;
                             });
 
                             const descriptor = await extractFaceDescriptor(img);
