@@ -314,18 +314,17 @@
                 }
             };
 
-            // Extract face descriptors from image
-            const extractFaceDescriptor = async (imageElement) => {
+            // Extract ALL face descriptors from image (one per detected person)
+            const extractFaceDescriptors = async (imageElement) => {
                 try {
-                    const detection = await faceapi
-                        .detectSingleFace(imageElement)
+                    const detections = await faceapi
+                        .detectAllFaces(imageElement)
                         .withFaceLandmarks()
-                        .withFaceDescriptor();
-                    
-                    return detection ? detection.descriptor : null;
+                        .withFaceDescriptors();
+                    return detections.map(d => d.descriptor);
                 } catch (error) {
                     console.warn('Face detection failed:', error);
-                    return null;
+                    return [];
                 }
             };
 
@@ -374,12 +373,12 @@
                                 img.src = `https://lh3.googleusercontent.com/d/${file.id}=w800`;
                             });
 
-                            const descriptor = await extractFaceDescriptor(img);
-                            console.log(`Face detection result for ${file.name}:`, descriptor ? 'Found face' : 'No face');
-                            if (descriptor) {
+                            const descriptors = await extractFaceDescriptors(img);
+                            console.log(`Face detection result for ${file.name}:`, descriptors.length, 'faces found');
+                            for (const descriptor of descriptors) {
                                 indexed.push({
                                     ...file,
-                                    descriptor: Array.from(descriptor), // Convert to array for JSON storage
+                                    descriptor: Array.from(descriptor),
                                     thumbnail: img.src
                                 });
                             }

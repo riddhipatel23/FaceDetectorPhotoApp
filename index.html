@@ -33,30 +33,50 @@
         .header {
             text-align: center;
             margin-bottom: 32px;
-            background: rgba(254, 252, 248, 0.97);
-            padding: 40px 30px 32px;
             border-radius: 20px;
-            box-shadow: 0 4px 32px rgba(60, 80, 50, 0.10);
+            box-shadow: 0 6px 40px rgba(30, 40, 25, 0.28);
             border: 1px solid rgba(107, 143, 94, 0.28);
             position: relative;
             overflow: hidden;
+            min-height: 340px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
 
-        .header::before {
-            content: '';
+        .header-bg {
             position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(90deg, #b8c8a8, #6b8f5e, #c4847a, #6b8f5e, #b8c8a8);
+            inset: 0;
+            background-image: url('./IMG_4369.JPG');
+            background-size: cover;
+            background-position: center 30%;
+            filter: brightness(0.82);
+        }
+
+        .header-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                to bottom,
+                rgba(20, 30, 18, 0.15) 0%,
+                rgba(20, 30, 18, 0.45) 55%,
+                rgba(15, 22, 12, 0.78) 100%
+            );
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 2;
+            padding: 32px 30px 36px;
         }
 
         .om {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 2.2rem;
-            color: #5c7a52;
-            margin-bottom: 4px;
-            letter-spacing: 2px;
-            opacity: 0.85;
+            font-size: 2rem;
+            color: rgba(255, 255, 255, 0.88);
+            margin-bottom: 2px;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 12px rgba(0,0,0,0.4);
         }
 
         .lotus-divider {
@@ -64,56 +84,59 @@
             align-items: center;
             justify-content: center;
             gap: 12px;
-            margin: 8px 0 16px;
-            color: #9ab08a;
-            font-size: 1rem;
+            margin: 6px 0 14px;
+            color: rgba(210, 230, 200, 0.7);
+            font-size: 0.95rem;
         }
 
         .lotus-divider::before,
         .lotus-divider::after {
             content: '';
             flex: 1;
-            max-width: 80px;
+            max-width: 70px;
             height: 1px;
-            background: linear-gradient(90deg, transparent, #9ab08a);
+            background: linear-gradient(90deg, transparent, rgba(210,230,200,0.55));
         }
 
         .lotus-divider::after {
-            background: linear-gradient(90deg, #9ab08a, transparent);
+            background: linear-gradient(90deg, rgba(210,230,200,0.55), transparent);
         }
 
         .header h1 {
             font-family: 'Great Vibes', cursive;
-            font-size: 3.8rem;
-            color: #3d5c38;
+            font-size: 4rem;
+            color: #ffffff;
             line-height: 1.1;
             margin-bottom: 6px;
+            text-shadow: 0 2px 20px rgba(0,0,0,0.45);
         }
 
         .ceremony-title {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 1rem;
-            letter-spacing: 0.35em;
+            font-size: 0.85rem;
+            letter-spacing: 0.4em;
             text-transform: uppercase;
-            color: #7a9e6f;
-            margin-bottom: 12px;
+            color: rgba(210, 230, 200, 0.9);
+            margin-bottom: 14px;
             font-weight: 400;
         }
 
         .blessing {
             font-family: 'Cormorant Garamond', serif;
             font-style: italic;
-            font-size: 1.05rem;
-            color: #a89060;
-            margin-bottom: 12px;
+            font-size: 1.15rem;
+            color: rgba(255, 255, 255, 0.92);
+            margin-bottom: 10px;
+            text-shadow: 0 1px 10px rgba(0,0,0,0.4);
+            line-height: 1.5;
         }
 
         .header-subtitle {
-            font-size: 0.95rem;
-            color: #5a6b56;
+            font-size: 0.88rem;
+            color: rgba(210, 230, 200, 0.8);
             font-weight: 300;
             line-height: 1.6;
-            max-width: 480px;
+            max-width: 440px;
             margin: 0 auto;
         }
 
@@ -533,7 +556,7 @@
         const { useState, useEffect, useRef } = React;
 
         const FACE_API_MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model';
-        const CONFIDENCE_THRESHOLD = 0.45;
+        const CONFIDENCE_THRESHOLD = 0.52;
 
         function GuestFinder() {
             const [isLoadingModels, setIsLoadingModels] = useState(false);
@@ -622,7 +645,9 @@
             const startCamera = async () => {
                 setError('');
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } });
+                    const stream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
+                    });
                     streamRef.current = stream;
                     setShowCamera(true);
                 } catch (err) {
@@ -679,21 +704,23 @@
                         throw new Error('No face detected in your photo. Please try again with a clearer, well-lit image where your face is clearly visible.');
                     }
 
-                    const matches = [];
-                    const seen = new Set();
+                    // Best-match-per-photo: same photo may have multiple face entries; keep the closest
+                    const bestPerPhoto = new Map();
                     for (const photo of indexedPhotos) {
                         try {
                             const distance   = faceapi.euclideanDistance(guestDescriptor, photo.descriptor);
                             const confidence = Math.max(0, (1 - distance) * 100);
-                            if (distance < CONFIDENCE_THRESHOLD && !seen.has(photo.id)) {
-                                matches.push({ ...photo, confidence, distance });
-                                seen.add(photo.id);
+                            if (distance < CONFIDENCE_THRESHOLD) {
+                                const existing = bestPerPhoto.get(photo.id);
+                                if (!existing || distance < existing.distance) {
+                                    bestPerPhoto.set(photo.id, { ...photo, confidence, distance });
+                                }
                             }
                         } catch (e) {
                             console.warn('Compare error:', photo.name, e);
                         }
                     }
-
+                    const matches = Array.from(bestPerPhoto.values());
                     matches.sort((a, b) => a.distance - b.distance);
                     setMatchedPhotos(matches);
                     if (matches.length > 0) {
@@ -725,14 +752,20 @@
 
             const Header = () => (
                 <div className="header">
-                    <div className="om">ॐ</div>
-                    <div className="lotus-divider">🪷</div>
-                    <h1>Riddhi &amp; Parth</h1>
-                    <div className="ceremony-title">Goldhana Ceremony</div>
-                    <div className="blessing">Blessings Are All We Seek</div>
-                    <p className="header-subtitle">
-                        Upload your photo to find all the beautiful moments you're part of
-                    </p>
+                    <div className="header-bg"></div>
+                    <div className="header-overlay"></div>
+                    <div className="header-content">
+                        <div className="om">ॐ</div>
+                        <div className="lotus-divider">🪷</div>
+                        <h1>Riddhi &amp; Parth</h1>
+                        <div className="ceremony-title">Goldhana Ceremony</div>
+                        <div className="blessing">
+                            You made our Goldhana unforgettable —<br/>relive your moments here 🤍
+                        </div>
+                        <p className="header-subtitle">
+                            Upload your photo to find all the beautiful moments you're part of
+                        </p>
+                    </div>
                 </div>
             );
 
